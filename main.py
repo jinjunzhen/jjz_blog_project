@@ -42,7 +42,7 @@ class User(UserMixin, db.Model):
     name = db.Column(db.String(50), nullable=False)
     email = db.Column(db.String(100), unique=True)
     password = db.Column(db.String(200), nullable=False)
-    img_url = db.Column(db.String(250), nullable=False)
+    img_url = db.Column(db.String(500), nullable=False)
     posts = relationship("BlogPost", back_populates="author")
     comments = relationship("Comment", back_populates="comment_author")
 
@@ -67,13 +67,8 @@ class BlogPost(db.Model):
     subtitle = db.Column(db.String(250), nullable=False)
     date = db.Column(db.String(250), nullable=False)
     body = db.Column(db.Text, nullable=False)
-    img_url = db.Column(db.String(250), nullable=False)
+    img_url = db.Column(db.String(500), nullable=False)
     comments = relationship('Comment', back_populates="on_bolg")
-
-
-
-
-
 
 
 db.create_all()
@@ -131,9 +126,9 @@ def register():
             password=hash_and_salted_password,
             img_url=request.form.get('img_url')
         )
-
         db.session.add(new_user)
         db.session.commit()
+        logout_user(new_user)
         return render_template('index.html', form=register_form)
 
     return render_template("register.html", form=register_form)
