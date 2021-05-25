@@ -14,7 +14,6 @@ from forms import CreatePostForm, RegisterFormForUser, LoginFormForUser, Comment
 from flask_gravatar import Gravatar
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'anything_here_as_secret_key'
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
 ckeditor = CKEditor(app)
 Bootstrap(app)
@@ -42,7 +41,6 @@ class User(UserMixin, db.Model):
     name = db.Column(db.String(50), nullable=False)
     email = db.Column(db.String(100), unique=True)
     password = db.Column(db.String(200), nullable=False)
-    img_url = db.Column(db.String(500), nullable=False)
     posts = relationship("BlogPost", back_populates="author")
     comments = relationship("Comment", back_populates="comment_author")
 
@@ -124,12 +122,11 @@ def register():
             email=request.form.get('email'),
             name=request.form.get('name'),
             password=hash_and_salted_password,
-            img_url=request.form.get('img_url')
         )
         db.session.add(new_user)
         db.session.commit()
-        logout_user(new_user)
-        return render_template('index.html', form=register_form)
+        login_user(new_user)
+        return redirect('index.html')
 
     return render_template("register.html", form=register_form)
 
