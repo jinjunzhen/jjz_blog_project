@@ -1,0 +1,11 @@
+.myLogo {
+    width:30%;
+    margin-right:5px;
+    height:30%;
+    float:left;
+}
+
+.myLogo img {
+    width:100%;
+    border-radius:50%;
+}

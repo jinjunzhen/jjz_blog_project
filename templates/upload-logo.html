@@ -1,12 +1,11 @@
 {% extends 'bootstrap/base.html' %}
 {% import "bootstrap/wtf.html" as wtf %}
-
 {% block content %}
 {% include "header.html" %}
 
 <!-- Page Header -->
 <header class="masthead"
-        style="background-image: url('static/img/raining.jpg')">
+        style="background-image: url('https://images.unsplash.com/photo-1531592937781-344ad608fabf?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=800&q=80')">
     <div class="overlay"></div>
     <div class="container">
         <div class="row">
@@ -33,7 +32,21 @@
             {% endif %}
             {% endwith %}
 
-            {{ wtf.quick_form(form, novalidate=True, button_map={"submit": "primary"}) }}
+            {% if ds %}
+            {% for d in ds%}
+            <ul>
+                <img src="/get/{{d.id}}">
+            </ul>
+            {% endfor %}
+            {% endif %}
+
+
+            <form method="post" enctype="multipart/form-data">
+                {{ form.hidden_tag() }}
+                {{ form.file }}
+                <input type="submit">
+            </form>
+
 
         </div>
     </div>

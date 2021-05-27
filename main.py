@@ -1,16 +1,18 @@
+import base64
 import os
 from functools import wraps
-from flask import Flask, render_template, redirect, url_for, flash, request
+from io import BytesIO
+
+from flask import Flask, render_template, redirect, url_for, flash, request, Response, send_file
 from flask_bootstrap import Bootstrap
 from flask_ckeditor import CKEditor
 from datetime import date
-
 from werkzeug.exceptions import abort
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import relationship
 from flask_login import UserMixin, login_user, LoginManager, login_required, current_user, logout_user
-from forms import CreatePostForm, RegisterFormForUser, LoginFormForUser, CommentForm
+from forms import CreatePostForm, RegisterFormForUser, LoginFormForUser, CommentForm, ProfileForm, UploadLogo
 from flask_gravatar import Gravatar
 
 app = Flask(__name__)
@@ -39,9 +41,11 @@ class User(UserMixin, db.Model):
     __tablename__ = "users"
     id = db.Column(db.Integer, primary_key=True, nullable=False)
     name = db.Column(db.String(50), nullable=False)
+    image = db.Column(db.LargeBinary(length=2048), nullable=True)
     email = db.Column(db.String(100), unique=True)
     password = db.Column(db.String(200), nullable=False)
     posts = relationship("BlogPost", back_populates="author")
+    # logo = db.Column(db.LargeBinary)
     comments = relationship("Comment", back_populates="comment_author")
 
 
@@ -65,20 +69,19 @@ class BlogPost(db.Model):
     subtitle = db.Column(db.String(250), nullable=False)
     date = db.Column(db.String(250), nullable=False)
     body = db.Column(db.Text, nullable=False)
-    img_url = db.Column(db.String(10000), nullable=False)
+    img_url = db.Column(db.String(20000), nullable=False)
     comments = relationship('Comment', back_populates="on_bolg")
 
 
 db.create_all()
 
 
-def admin_only(f):
+def user_only(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if current_user.id != 1:
+        if not current_user.is_authenticated:
             return abort(403)
         return f(*args, **kwargs)
-
     return decorated_function
 
 
@@ -118,10 +121,13 @@ def register():
             salt_length=8
         )
 
+        file = request.files['file'].read()
+
         new_user = User(
             email=request.form.get('email'),
             name=request.form.get('name'),
             password=hash_and_salted_password,
+            image=file
         )
         db.session.add(new_user)
         db.session.commit()
@@ -156,7 +162,6 @@ def logout():
 
 @app.route("/post/<int:post_id>")
 def show_post(post_id):
-    # comment_form = CommentForm()
     requested_post = BlogPost.query.get(post_id)
     requested_comments = Comment.query.filter_by(blog_id=post_id)
     return render_template("post.html", post=requested_post, current_user=current_user, comments=requested_comments)
@@ -234,6 +239,68 @@ def delete_post(post_id):
     db.session.delete(post_to_delete)
     db.session.commit()
     return redirect(url_for('get_all_posts'))
+
+
+@app.route("/profile")
+@user_only
+def profile():
+    profile_form = ProfileForm()
+    upload_logo = UploadLogo()
+    return render_template("profile.html", form1=profile_form, form0=upload_logo, current_user=current_user)
+
+
+@app.route("/update_password", methods=['POST'])
+def updatePassWord():
+    profile_form = ProfileForm()
+    if request.method == 'POST' and profile_form.validate_on_submit():
+        user_from_db = User.query.filter_by(email=current_user.email).first()
+        if request.form.get('password_confirm') != request.form.get('password'):
+            flash("Your passwords do not match")
+            return redirect(url_for('profile'))
+        if not user_from_db:
+            flash("That email does not exist, please try again.")
+            return redirect(url_for('profile'))
+        elif not check_password_hash(user_from_db.password, request.form.get('old_password')):
+            flash('Password incorrect, please try again.')
+            return redirect(url_for('profile'))
+
+        hash_and_salted_password = generate_password_hash(
+            request.form.get('password'),
+            method='pbkdf2:sha256',
+            salt_length=8
+        )
+        user_from_db.password = hash_and_salted_password;
+        db.session.commit()
+
+        return redirect(url_for('profile'))
+    return redirect(url_for('profile'))
+
+
+@app.route("/update_logo", methods=['POST'])
+def updateLogo():
+    upload_logo = UploadLogo()
+    if request.method == 'POST' and upload_logo.validate_on_submit():
+        user_from_db = User.query.filter_by(email=current_user.email).first()
+        file = request.files['file'].read()
+        user_from_db.image = file
+        db.session.commit()
+
+        return redirect(url_for('profile'))
+    return redirect(url_for('profile'))
+
+
+
+
+
+@app.route("/get/<int:id>")
+def get(id):
+    img = User.query.filter_by(id=id).first()
+    if not img:
+        return "no img", 404
+    return send_file(BytesIO(img.image), attachment_filename="file_name.jpg", as_attachment=True)
+
+
+
 
 
 if __name__ == "__main__":

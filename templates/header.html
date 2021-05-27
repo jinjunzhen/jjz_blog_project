@@ -20,6 +20,7 @@
 
   <!-- Custom styles for this template -->
   <link href="{{ url_for('static', filename='css/clean-blog.min.css')}}" rel="stylesheet">
+  <link href="{{ url_for('static', filename='css/more.css')}}" rel="stylesheet">
 
 </head>
 
@@ -61,6 +62,12 @@
           <li class="nav-item">
             <a class="nav-link" href="{{ url_for('contact') }}">Contact</a>
           </li>
+
+          {% if current_user.is_authenticated: %}
+          <li class="nav-item">
+            <a class="nav-link" href="{{ url_for('profile') }}">profile</a>
+          </li>
+          {% endif %}
         </ul>
       </div>
     </div>

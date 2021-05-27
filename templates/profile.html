@@ -1,0 +1,70 @@
+{% extends 'bootstrap/base.html' %}
+{% import "bootstrap/wtf.html" as wtf %}
+{% block content %}
+{% include "header.html" %}
+
+<!-- Page Header -->
+<header class="masthead"
+        style="background-image: url('https://images.unsplash.com/photo-1531592937781-344ad608fabf?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=800&q=80')">
+    <div class="overlay"></div>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 col-md-10 mx-auto">
+                <div class="page-heading">
+                    <h1>Register</h1>
+                    <span class="subheading">Start Contributing to the Blog!</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<div class="container">
+    <div class="row">
+        <div class="col-lg-8 col-md-10 mx-auto">
+
+            <div class="myLogo">
+                <img src="/get/{{current_user.id}}">
+            </div>
+
+            <form method="post" enctype="multipart/form-data" action="update_logo">
+                {{ form0.hidden_tag() }}
+                {{ form0.file }}
+                <input type="submit">
+            </form>
+
+
+            <form method="post" action="update_password">
+                {% with messages = get_flashed_messages() %}
+                {% if messages %}
+                <ul class=flashes>
+                    {% for message in messages %}
+                    <li>{{ message }}</li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+                {% endwith %}
+
+                {{ form1.hidden_tag() }}
+                {{form1.old_password.label}}
+                <br>
+                {{form1.old_password}}
+                <br>
+                {{form1.password.label}}
+                <br>
+                {{form1.password}}
+                <br>
+                {{form1.password_confirm.label}}
+                <br>
+                {{form1.password_confirm}}
+                <br>
+                <input type="submit">
+            </form>
+
+
+        </div>
+    </div>
+</div>
+
+{% include "footer.html" %}
+{% endblock %}
