@@ -20,15 +20,23 @@
 </header>
 
 <div class="container">
+
     <div class="row">
         <div class="col-lg-8 col-md-10 mx-auto">
 
             <div class="myLogo">
                 <img src="/get/{{current_user.id}}">
             </div>
-            <br><br>
+            <br>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8 col-md-10 mx-auto">
+
 
             <form method="post" enctype="multipart/form-data" action="update_logo">
+                <br>
                 {{ form0.hidden_tag() }}
                 {{ form0.file }}
                 <input type="submit">
